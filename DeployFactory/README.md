@@ -6,6 +6,78 @@ This guide demonstrates how to deploy a contract factory using raw transaction p
 
 The `deploy-deployFactory.sh` script provides a clean, readable way to deploy contracts using `cast publish` with pre-deployment checks and formatted bytecode for better maintainability.
 
+## EIP-2470: Singleton Factory
+
+**⚠️ IMPORTANT:** This deployment script implements the **EIP-2470 Singleton Factory** standard, which is crucial for deterministic contract deployment across different blockchain networks.
+
+### What is EIP-2470?
+
+[EIP-2470](https://eips.ethereum.org/EIPS/eip-2470) defines a standard "Singleton Factory" contract that:
+
+- **Deterministic Deployment**: Deploys contracts to the same address across all EVM-compatible chains
+- **CREATE2 Implementation**: Uses CREATE2 opcode for address predictability
+- **Cross-Chain Compatibility**: Ensures consistent contract addresses on mainnet, testnets, and L2s
+- **Standard Address**: Always deployed at `0xce0042B868300000d44A59004Da54A005ffdcf9f`
+
+### Why EIP-2470 Matters
+
+🎯 **Predictable Addresses**: Know your contract address before deployment
+🌐 **Cross-Chain Consistency**: Same contract address on all supported networks  
+🔒 **Security**: Prevents address collision attacks
+⚡ **Efficiency**: Reduces deployment costs and complexity
+📦 **Standardization**: Industry-standard approach used by major protocols
+
+### How This DeployFactory Uses EIP-2470
+
+The deployed contract bytecode contains the EIP-2470 implementation:
+
+```solidity
+// Simplified EIP-2470 functionality
+function deploy(bytes memory _initCode, bytes32 _salt) 
+    public 
+    returns (address payable createdContract) 
+{
+    assembly {
+        createdContract := create2(0, add(_initCode, 0x20), mload(_initCode), _salt)
+    }
+    require(createdContract != address(0), "Could not deploy contract");
+}
+```
+
+### Expected Deployment Address
+
+When using this script, the EIP-2470 Singleton Factory will be deployed to:
+```
+0xce0042B868300000d44A59004Da54A005ffdcf9f
+```
+
+**This address is the same across ALL EVM-compatible networks.**
+
+### Verifying EIP-2470 Deployment
+
+After running the deployment script, verify the factory is correctly deployed:
+
+```bash
+# Check if EIP-2470 is deployed
+cast code 0xce0042B868300000d44A59004Da54A005ffdcf9f --rpc-url YOUR_RPC_URL
+
+# Should return the EIP-2470 bytecode (not 0x)
+```
+
+### Using the Deployed Factory
+
+Once deployed, you can use the factory for deterministic deployments:
+
+```bash
+# Example: Deploy a contract with known address
+cast send 0xce0042B868300000d44A59004Da54A005ffdcf9f \
+  "deploy(bytes,bytes32)" \
+  YOUR_CONTRACT_BYTECODE \
+  YOUR_SALT \
+  --rpc-url YOUR_RPC_URL \
+  --private-key YOUR_PRIVATE_KEY
+```
+
 ## Prerequisites
 
 - **Foundry**: Ensure you have `cast` installed from [Foundry](https://book.getfoundry.sh/getting-started/installation)

@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# EIP-2470: DeployFactory Contract Deployment
+# Deploys the standard Singleton Factory to enable deterministic contract addresses across all EVM chains
+
 
 # Set rpc url
 RPC_URL="https://YOUR_RPC_URL"
